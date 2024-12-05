@@ -16,7 +16,7 @@ format:
       - right=20mm
       - bottom=30mm
       - heightrounded
-abstract: "Her kan I skrive et abstract, som ikke bør fylde mere end en halv side. Bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa....hej. Hej fra Martin"
+abstract: "Her kan I skrive et abstract, som ikke bør fylde mere end en halv side. Bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa....hej. Hej fra Martin" "abdi"
 ---
 
 ```{r}
