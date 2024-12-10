@@ -69,6 +69,8 @@ vff_kampe |>
 hjemmekampe_vff <- vff_kampe |> 
   filter(grepl("^VFF", kamp))
 
+# Vis kun VFF hjemmekampe
+hjemmekampe_vff
 #--------------------------------------------------------------------------------
 
 # Henter data fra DMI
