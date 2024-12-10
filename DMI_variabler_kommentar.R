@@ -66,6 +66,10 @@ vff_kampe
 vff_kampe |> 
   count(sæson) # Har tjekket at det stemmer med antal kampe i sæsonen på superstats
 
+# Vi filtrerer datoer for hjemmekampe ud
+hjemmekampe_vff <- vff_kampe |> 
+  filter(grepl("^VFF", kamp))
+
 #--------------------------------------------------------------------------------
 
 # Henter data fra DMI
