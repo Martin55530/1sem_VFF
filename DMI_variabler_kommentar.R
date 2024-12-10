@@ -1,5 +1,5 @@
 # Henter data fra Superstats
-
+#Det virker
 #--------------------------------------------------------------------------------
 
 # Henter data fra DMI
