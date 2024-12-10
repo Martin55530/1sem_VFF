@@ -1,6 +1,5 @@
 # Pakker vi loader med pacman
 pacman::p_load(httr, jsonlite, tidyverse, rlist, rjstat, rjson, Rcrawler, rvest)
-# 123
 # ------------------------------------------------------------------------------
 
 # Henter data fra Superstats
