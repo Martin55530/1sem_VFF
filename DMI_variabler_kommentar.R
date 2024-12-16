@@ -156,3 +156,7 @@ view(variabler_datasæt)
 
 
 # https://dmigw.govcloud.dk/v2/metObs/collections/observation/items?stationId=06180&parameterId=wind_speed&datetime=2000-01-01T00:00:00Z/2000-01-31T23:59:00Z&api-key=48de7afb-236e-430a-b814-130c6d2290f6&limit=10000
+
+
+# test 
+
