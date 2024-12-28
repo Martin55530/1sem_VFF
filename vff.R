@@ -466,9 +466,9 @@ joins_samlet <- joins_samlet |>
 
 # Undersøg datasættet "joins_samlet"
 # Før vi går videre, får vi et overblik over datasættet:
-view(joins_samlet)  # Åbner datasættet i en visning for at inspicere indholdet
-str(joins_samlet)  # Viser datastrukturen, fx typer og dimensioner af kolonner
-colSums(is.na(joins_samlet))  # Tæller antallet af manglende værdier (NA) i hver kolonne
+# view(joins_samlet)  # Åbner datasættet i en visning for at inspicere indholdet
+# str(joins_samlet)  # Viser datastrukturen, fx typer og dimensioner af kolonner
+# colSums(is.na(joins_samlet))  # Tæller antallet af manglende værdier (NA) i hver kolonne
 
 # Fjern variabler med mange manglende værdier eller lav relevans
 # Dette reducerer risikoen for, at ubrugelige variabler påvirker modellen.
