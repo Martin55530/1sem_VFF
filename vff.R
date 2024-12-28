@@ -64,6 +64,24 @@ excel_guld <- excel_guld |>
 excel_guld <- excel_guld |>
   dplyr::select(-Antal_bestilte, -Antal_max)
 
+# Funktion til at finde outliers
+find_outliers <- function(data, column) {
+  x <- data[[column]]
+  iqr <- IQR(x, na.rm = TRUE)  # Interkvartil-range
+  lower_bound <- quantile(x, 0.25, na.rm = TRUE) - 1.5 * iqr
+  upper_bound <- quantile(x, 0.75, na.rm = TRUE) + 1.5 * iqr
+  which(x < lower_bound | x > upper_bound)  # Returnerer indeks for outliers
+}
+
+# Håndter outliers i Excel_guld
+numeric_columns_guld <- excel_guld |> 
+  dplyr::select(where(is.numeric)) |> 
+  names()
+
+for (col in numeric_columns_guld) {
+  excel_guld[[col]][find_outliers(excel_guld, col)] <- NA  # Sæt outliers til NA eller en anden værdi
+}
+
 
 
 # Superstats
@@ -136,6 +154,15 @@ superstats_hjemmekampe <- superstats_vff |>
     dato = as.Date(paste(årstal, format(dato, "%m-%d"), sep = "-"))  # Samler årstal og måned-dag
   ) |> 
   dplyr::select(-måned, -årstal)  # Fjerner midlertidige kolonner
+
+# Håndtering af outliers i superstats_hjemmekampe
+numeric_columns_hjemmekampe <- superstats_hjemmekampe %>%
+  dplyr::select(where(is.numeric)) %>%
+  names()
+
+for (col in numeric_columns_hjemmekampe) {
+  superstats_hjemmekampe[[col]][find_outliers(superstats_hjemmekampe, col)] <- NA  # Sæt outliers til NA
+}
 
 # Valgfrit: Vis datasæt
 # View(superstats)               # Hele datasættet fra webscrapingen
@@ -241,7 +268,14 @@ dmi_variabler <- dmi_variabler |>
   ) |> 
   dplyr::select(-Observationstidspunkt)  # Fjerner observationstidspunktet, da vi har en dato kolonne og vi ved at data er hentet kl. 16:00 alle datoer
 
+# Håndtering af outliers i dmi_variabler
+numeric_columns_dmi <- dmi_variabler |> 
+  dplyr::select(where(is.numeric)) |> 
+  names()
 
+for (col in numeric_columns_dmi) {
+  dmi_variabler[[col]][find_outliers(dmi_variabler, col)] <- NA  # Sæt outliers til NA
+}
 
 
 
@@ -358,10 +392,10 @@ joins_samlet <- joins_samlet |>
 # ------------------------------------------------------------------------------
 # Tilføj guldmenuer fra sidste møde
 # ------------------------------------------------------------------------------
-joins_samlet <- joins_samlet |> 
-  group_by(Modstander) |> 
-  mutate(guld_menuer_sidste_møde = lag(Guld_menu_stk, default = 0)) |> 
-  ungroup() |> 
+joins_samlet <- joins_samlet |>
+  group_by(Modstander) |>
+  mutate(guld_menuer_sidste_møde = lag(Guld_menu_stk, default = 0)) |>
+  ungroup() |>
   relocate(guld_menuer_sidste_møde, .after = Guld_menu_stk)
 
 # ------------------------------------------------------------------------------
@@ -370,62 +404,62 @@ joins_samlet <- joins_samlet |>
 joins_samlet <- joins_samlet |> 
   mutate(
     kategori = case_when(
-      Modstander %in% c("VFF-AGF", "VFF-FCK", "VFF-BIF", "VFF-FCM") ~ "A",
-      Modstander %in% c("VFF-RFC", "VFF-SIF", "VFF-FCN") ~ "B",
+      Modstander %in% c("VFF-AGF", "VFF-OB", "VFF-BIF", "VFF-FCM") ~ "A",
+      Modstander %in% c("VFF-RFC", "VFF-SIF", "VFF-FCK") ~ "B",
       TRUE ~ "C"
     ) |> factor(levels = c("A", "B", "C"))  # Angiver specifik rækkefølge af faktorniveauer
   ) |> 
   relocate(kategori, .before = antal_tilskuere)
 
-# ------------------------------------------------------------------------------
-# Interaktion mellem antal tilskuere og vejr
-# ------------------------------------------------------------------------------
-# Denne variabel undersøger, hvordan vejrforhold (temp_dry) påvirker antal tilskuere
-# (antal_tilskuere). Eksempel: Hvis dårligt vejr (lav temperatur) reducerer 
-# tilskuertallet mere for visse kampe, kan denne interaktion fange det.
-joins_samlet <- joins_samlet |>
-  mutate(tilskuere_vejr_interaktion = as.numeric(antal_tilskuere) * temp_dry)
-
-
-# ------------------------------------------------------------------------------
-# Interaktion mellem kampkategori og vejr
-# ------------------------------------------------------------------------------
-# Denne variabel repræsenterer samspillet mellem vejr (temp_dry) og kampkategorien 
-# (kategori). Eksempel: Kampkategorien kan have en forskellig effekt på kampens 
-# resultater afhængigt af vejret. For eksempel kan topkampe påvirkes mindre af 
-# dårligt vejr, da de har mere engagerede tilskuere.
-joins_samlet <- joins_samlet |>
-  mutate(vejr_kategori_interaktion = temp_dry * as.numeric(kategori))
-
-
-# ------------------------------------------------------------------------------
-# Interaktion mellem ugedag og vejr
-# ------------------------------------------------------------------------------
-# Denne variabel fanger, hvordan kombinationen af ugedag (ugedag) og kampkategori
-# (kategori) påvirker kampforholdene. Eksempel: Kampe i weekenden (højere ugedagsværdi)
-# kan have større tilskueropbakning, især hvis det er topkampe.
-joins_samlet <- joins_samlet |>
-  mutate(ugedag_kategori_interaktion = as.numeric(ugedag) * as.numeric(kategori))
-
-
-# ------------------------------------------------------------------------------
-# Interaktion mellem modstander og guldmenuer fra sidste møde
-# ------------------------------------------------------------------------------
-# Denne interaktion viser, hvordan tidligere salg af guldmenuer (guld_menuer_sidste_møde)
-# afhænger af modstanderens kategori (kategori). Eksempel: Hvis populære modstandere fører
-# til større salg, kan denne interaktion hjælpe med at modellere forventede salg.
-joins_samlet <- joins_samlet |>
-  mutate(modstander_guldmenu_interaktion = as.numeric(guld_menuer_sidste_møde) * as.numeric(kategori))
-
-
-# ------------------------------------------------------------------------------
-# Interaktion mellem point fra sidste kampe og antal tilskuere
-# ------------------------------------------------------------------------------
-# Denne variabel kombinerer holdets præstation i de seneste kampe (point_sidste_3_kampe) 
-# med antallet af tilskuere (antal_tilskuere).
-# Eksempel: Hvis gode præstationer fører til højere tilskuertal, kan denne interaktion forklare det.
-joins_samlet <- joins_samlet |>
-  mutate(point_tilskuere_interaktion = point_sidste_3_kampe * as.numeric(antal_tilskuere))
+# # ------------------------------------------------------------------------------
+# # Interaktion mellem antal tilskuere og vejr
+# # ------------------------------------------------------------------------------
+# # Denne variabel undersøger, hvordan vejrforhold (temp_dry) påvirker antal tilskuere
+# # (antal_tilskuere). Eksempel: Hvis dårligt vejr (lav temperatur) reducerer 
+# # tilskuertallet mere for visse kampe, kan denne interaktion fange det.
+# joins_samlet <- joins_samlet |>
+#   mutate(tilskuere_vejr_interaktion = as.numeric(antal_tilskuere) * temp_dry)
+# 
+# 
+# # ------------------------------------------------------------------------------
+# # Interaktion mellem kampkategori og vejr
+# # ------------------------------------------------------------------------------
+# # Denne variabel repræsenterer samspillet mellem vejr (temp_dry) og kampkategorien 
+# # (kategori). Eksempel: Kampkategorien kan have en forskellig effekt på kampens 
+# # resultater afhængigt af vejret. For eksempel kan topkampe påvirkes mindre af 
+# # dårligt vejr, da de har mere engagerede tilskuere.
+# joins_samlet <- joins_samlet |>
+#   mutate(vejr_kategori_interaktion = temp_dry * as.numeric(kategori))
+# 
+# 
+# # ------------------------------------------------------------------------------
+# # Interaktion mellem ugedag og vejr
+# # ------------------------------------------------------------------------------
+# # Denne variabel fanger, hvordan kombinationen af ugedag (ugedag) og kampkategori
+# # (kategori) påvirker kampforholdene. Eksempel: Kampe i weekenden (højere ugedagsværdi)
+# # kan have større tilskueropbakning, især hvis det er topkampe.
+# joins_samlet <- joins_samlet |>
+#   mutate(ugedag_kategori_interaktion = as.numeric(ugedag) * as.numeric(kategori))
+# 
+# 
+# # ------------------------------------------------------------------------------
+# # Interaktion mellem modstander og guldmenuer fra sidste møde
+# # ------------------------------------------------------------------------------
+# # Denne interaktion viser, hvordan tidligere salg af guldmenuer (guld_menuer_sidste_møde)
+# # afhænger af modstanderens kategori (kategori). Eksempel: Hvis populære modstandere fører
+# # til større salg, kan denne interaktion hjælpe med at modellere forventede salg.
+# joins_samlet <- joins_samlet |>
+#   mutate(modstander_guldmenu_interaktion = as.numeric(guld_menuer_sidste_møde) * as.numeric(kategori))
+# 
+# 
+# # ------------------------------------------------------------------------------
+# # Interaktion mellem point fra sidste kampe og antal tilskuere
+# # ------------------------------------------------------------------------------
+# # Denne variabel kombinerer holdets præstation i de seneste kampe (point_sidste_3_kampe)
+# # med antallet af tilskuere (antal_tilskuere).
+# # Eksempel: Hvis gode præstationer fører til højere tilskuertal, kan denne interaktion forklare det.
+# joins_samlet <- joins_samlet |>
+#   mutate(point_tilskuere_interaktion = point_sidste_3_kampe * as.numeric(antal_tilskuere))
 
 
 #-------------------------------------------------------------------------------
@@ -440,18 +474,32 @@ colSums(is.na(joins_samlet))  # Tæller antallet af manglende værdier (NA) i hv
 # Dette reducerer risikoen for, at ubrugelige variabler påvirker modellen.
 joins_samlet <- joins_samlet |> 
   dplyr::select(
-    -dato,                    # Fjernes, da det er en tekstkolonne, ikke brugbar som predictor
-    -antal_tilskuere,         # Fjernes, da vi kun analyserer på Guld_menu_stk
-    -kamp, -resultat, -sæson, # Metadata fjernes, da de ikke bruges i modellerne
-    -precip_past1min,         # Fjernes da der kun er udfyldt 7/98 værdier
-    -weather,                 # Fjernes da der kun er udfyldt 22/98 værdier
-    -cloud_height,            # Fjernes da der kun er udfyldt 70/98 værdier
-    -wind_dir_past1h, -wind_min_past1h, -wind_min, -wind_max, -wind_gust_always_past1h, -wind_speed_past1h,   # Fjerner mange wind variabler pga. redundans, beholder Wind_dir og Wind_speed
-    -temp_grass_max_past1h, -temp_grass_mean_past1h, -temp_grass_min_past1h,  # Beholder Temp_grass
-    -precip_past10min, -precip_dur_past10min, precip_past1h,
-    -temp_max_past1h, -temp_grass, -temp_min_past1h, -temp_mean_past1h,
-    -pressure_at_sea, -humidity_past1h,
-    -visib_mean_last10min
+    -dato,
+    -kamp,
+    -resultat,
+    -antal_tilskuere,
+    -sæson,
+    -wind_dir_past1h,
+    -precip_past1h,
+    -wind_min_past1h,
+    -temp_grass_max_past1h,
+    -precip_past10min,
+    -temp_mean_past1h,
+    -precip_dur_past10min,
+    -wind_min,
+    -temp_grass_mean_past1h,
+    -temp_max_past1h,
+    -wind_max,
+    -visib_mean_last10min,
+    -temp_min_past1h,
+    -humidity_past1h,
+    -temp_grass_min_past1h,
+    -wind_gust_always_past1h,
+    -precip_dur_past1h,
+    -wind_speed_past1h,
+    -precip_past1min,
+    -pressure_at_sea,
+    -temp_grass
   )
 
 # Imputation af manglende værdier (NA)
@@ -497,6 +545,8 @@ glm.fit <- glm(Guld_menu_stk ~ 1, data = joins_samlet[train, ])  # Baseline-mode
 rmse_0_cv <- sqrt(cv.glm(joins_samlet[train, ], glm.fit, K = 5)$delta[1])  # RMSE fra krydsvalidering
 rmse_0_test <- sqrt(mean((y.test - predict(glm.fit, joins_samlet[test, ]))^2))  # RMSE for testdata
 
+rmse_0_test
+
 # ------------------------------------------------------------------------------
 # Ridge- og Lasso-regression
 # ------------------------------------------------------------------------------
@@ -508,12 +558,14 @@ y <- joins_samlet$Guld_menu_stk  # Målvariabel (genbrugt fra før)
 grid <- 10^seq(10, -2, length = 100)
 
 # Ridge regression (alpha = 0)
-ridge.mod <- glmnet(x[train, ], y[train], alpha = 0, lambda = grid, thresh = 1e-10)
+ridge.mod <- glmnet(x[train, ], y[train], alpha = 0, lambda = grid, thresh = 1e-12)
 cv.out <- cv.glmnet(x[train, ], y[train], alpha = 0, lambda = grid, nfolds = 5)
 bestlam <- cv.out$lambda.min  # Optimalt lambda
 rmse_ridge_cv <- sqrt(cv.out$cvm[cv.out$lambda == bestlam])  # RMSE fra krydsvalidering
 ridge.pred <- predict(ridge.mod, s = bestlam, newx = x[test, ])  # Forudsigelser for testdata
 rmse_ridge_test <- sqrt(mean((ridge.pred - y.test)^2))  # RMSE for testdata
+
+rmse_ridge_test
 
 # Udtræk koefficienter for Ridge-regression
 ridge.coef <- coef(ridge.mod, s = bestlam)
@@ -525,12 +577,14 @@ x <- model.matrix(Guld_menu_stk ~ ., joins_samlet)[, -1]  # Skaber designmatrix
 y <- joins_samlet$Guld_menu_stk  # Målvariabel (genbrugt fra før)
 grid <- 10^seq(10, -2, length = 100)
 
-lasso.mod <- glmnet(x[train, ], y[train], alpha = 1, lambda = grid, thresh = 1e-10)
+lasso.mod <- glmnet(x[train, ], y[train], alpha = 1, lambda = grid, thresh = 1e-12)
 cv.out <- cv.glmnet(x[train, ], y[train], alpha = 1, lambda = grid, nfolds = 5)
 bestlam <- cv.out$lambda.min  # Optimalt lambda
 rmse_lasso_cv <- sqrt(cv.out$cvm[cv.out$lambda == bestlam])  # RMSE fra krydsvalidering
 lasso.pred <- predict(lasso.mod, s = bestlam, newx = x[test, ])  # Forudsigelser for testdata
 rmse_lasso_test <- sqrt(mean((lasso.pred - y.test)^2))  # RMSE for testdata
+
+rmse_lasso_test
 
 # Udtræk koefficienter og variabler med ikke-nul koefficienter
 lasso.coef <- coef(lasso.mod, s = bestlam)
@@ -600,7 +654,7 @@ print(selected_vars)
 # rmse_bestsubset_cv <- sqrt(min(mean.cv.errors))
 
 
-# MSE PÅ ALLE MODELLERNE 
+# RMSE PÅ ALLE MODELLERNE 
 rmse_0_test
 rmse_ridge_test
 rmse_lasso_test
