@@ -1,0 +1,1322 @@
+---
+title: "Vintereksamen - Dataanalyse"
+subtitle: "Januar 2025"
+date: last-modified
+author: "Bjarne Taulo Sørensen"
+format: 
+  pdf:
+   toc: true
+   toc-title: Indholdsfortegnelse
+   toc-depth: 4
+   number-sections: true
+   number-depth: 4
+   geometry:
+      - top=30mm
+      - left=20mm
+      - right=20mm
+      - bottom=30mm
+      - heightrounded
+abstract: "Her kan I skrive et abstract, som ikke bør fylde mere end en halv side. Bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa....hej. Hej fra Martin" "abdi"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| warning: false
+#| 
+
+# eval: false prevents code from being evaluated. (And obviously if the code is not run, no results will be generated). This is useful for displaying example code, or for disabling a large block of code without commenting each line.
+
+# include: false runs the code, but doesn’t show the code or results in the final document. Use this for setup code that you don’t want cluttering your report.
+
+# echo: false prevents code, but not the results from appearing in the finished file. Use this when writing reports aimed at people who don’t want to see the underlying R code.
+
+# Du kan lave code chunks med crtl/alt/I. 
+# Angiv en label som ovenfor til hver chunk. 
+# Brug evt. include, eval, echo eller en anden parameter til at få det ønskede output
+
+pacman::p_load("tidyverse", "tinytex")
+# tinytex::install_tinytex()
+# tinytex::pdflatex('test.tex')
+
+# Tilføj selv flere pakker
+```
+
+# Intro
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+## Oversigt
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+# Metode
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+## Videnskabsteori
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+# Databrug (intern analyse i data perspektiv)
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+Her under **Organisation,** **Processer (benchmark),** **Kultur,** **Modenhed** 
+
+# Datainitiativer
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+## Introduktion til dataanalysen
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+ 
+Herunder **Baggrund,** **Formål,** **Fra forretningsproblem til datamining problem,** **Oversigt**
+
+---
+
+## Data/dataforståelse
+
+### Importer data til R
+Datasættet blev indlæst i R fra flere kilder: 
+1. **VIP-menu data** fra Excel-ark, 
+2. **Superstats kampdata** vha. webscraping og 
+3. **Meteorologiske observationer** fra DMI's API.
+
+Data blev samlet ved hjælp af `inner_join` på kampdatoer, hvilket sikrede kun relevante observationer for analyse. Herefter blev irrelevante kolonner og rækker fjernet, og datastrukturen kontrolleret for konsistens.
+
+### Output variabel
+Den valgte **outputvariabel** er `guld_menu_stk`, der repræsenterer antallet af afhentede VIP-guldmenuer. Dette er målet for modellens forudsigelser.
+
+### Forklarende variabler
+De forklarende variabler inkluderede blandt andet:
+- **Meteorologiske faktorer** som `vindretning`, `luftfugtighed`, `sigtbarhed` og `skydække`.
+- **Kamprelaterede faktorer** som `antal_tilskuere` og `guldmenu_sidste_møde`.
+- **Afledte faktorerr** som `ugedag`, `årstid` og `point_sidste_3_kampe`.
+
+### Data pre-processing i R
+Data blev forbehandlet for at sikre høj datakvalitet:
+- **Håndtering af outliers**: Observation nr. 7 i Excel-filen blev identificeret som en outlier. Kampene i 2013 havde generelt en lavere afsætning af guldmenuer, men denne kamp mod FCM havde en usædvanligt høj afsætning på 1378 stk. Dette blev korrigeret ved at anvende medianimputering for at reducere påvirkningen af ekstreme værdier.
+- **Manglende værdier**: Variabler som guld_menuer_sidste_møde og antal_tilskuere_sidste_møde indeholdt manglende værdier i tilfælde, hvor der ikke var data fra et tidligere møde. Disse blev erstattet med medianen for hele kolonnen for at sikre konsistens og reducere bias.
+- **Transformationer**: Nye variabler som `ugedag` og `årstid` blev oprettet baseret på datovariablen for at styrke modellens forklaringskraft. Variablen ugedag gjorde det muligt at identificere mønstre i data, hvor mandagskampe havde en positiv effekt på afsætningen af guldmenuer sammenlignet med lørdagskampe. Ligeledes gav variablen årstid indsigt i, hvordan eksempelvis kampe spillet om sommeren påvirkede afsætningen af guldmenuer i forhold til kampe spillet om vinteren. Disse transformationer gav en dybere forståelse af datasættet og bidrog til en mere præcis model.
+
+### Explorative analyse
+Den eksplorative analyse inkluderede histogrammer, scatterplots og korrelationsmatrixer for at identificere mønstre og sammenhænge. Stærkt korrelerede variabler blev fjernet for at reducere multikollinearitet.
+
+---
+
+## Valg af metode til at teste model performance
+For at evaluere modellens performance anvendte vi:
+1. **Træning/test-split**: Datasættet blev opdelt i 2/3 træning og 1/3 test.
+2. **Krydsvalidering**: 10-fold krydsvalidering blev brugt til at finde optimale parametre for Ridge og Lasso.
+3. **Performance-målinger**: RMSE, MAE og R² blev anvendt til at vurdere præcision og forklaringsgrad.
+
+---
+
+## Resultater
+
+### Konkurrerende modeller
+Tre modeller blev sammenlignet:
+1. **Baseline-model**: Forudsagde middelværdien uden forklarende variabler (RMSE = 147.49).
+2. **Ridge Regression**: Reducerede RMSE til 125.67 ved at inkludere alle variabler.
+3. **Lasso Regression**: Opnåede RMSE på 133.11 og forenklede modellen ved at udvælge de mest relevante variabler.
+
+### Modeludvælgelse
+Den endelige model blev valgt ud fra en balance mellem præcision og simplicitet. **Lasso Regression** blev valgt for dens evne til at reducere variabler uden væsentlig præcisionstab.
+
+### Overordnet præcision i forudsigelse
+Overordnet præcision i forudsigelse
+
+Lasso Regression viste en forbedring i forudsigelsespræcisionen sammenlignet med baseline-modellen, hvor RMSE (Root Mean Squared Error) blev reduceret med cirka 10%. Modellen opnåede en forklaringsgrad (R²) på 18.4%, hvilket betyder, at modellen kan forklare 18.4% af variationen i efterspørgslen efter VIP-guldmenuer. Selvom dette resultat viser, at modellen har potentiale, er det også et tegn på, at væsentlige forklarende faktorer stadig mangler i datasættet.
+
+Modellen identificerede seks centrale variabler, som bidrog til forudsigelsen. Blandt disse blev guld_menuer_sidste_møde vurderet som den vigtigste forklarende variabel med en væsentlig vægt (0.379), hvilket understreger betydningen af historisk data fra tidligere møder med samme modstander.
+
+Variablen vindretning (0.042) bidrog også positivt og viste en lidt større vægt end antal_tilskuere (0.041), hvilket antyder, at vejrmæssige faktorer som vindretning kan have en marginalt større effekt på efterspørgslen end tilskuertal. Af de meteorologiske faktorer havde luftfugtighed en negativ vægt (-0.259), hvilket antyder, at højere luftfugtighed kan reducere efterspørgslen. sigtbarhed (0.001) og skydække (-0.067) havde mindre vægt i modellen, men kan stadig spille en rolle som supplerende forklarende variabler.
+
+Denne brede kombination af historiske, demografiske og meteorologiske faktorer gav modellen en dybere forståelse af, hvad der driver efterspørgslen efter guldmenuer. Resultaterne viser potentialet for at anvende denne indsigt i praksis, men også behovet for yderligere data og optimering for at opnå en endnu højere præcision og forklaringskraft.
+
+---
+
+## Diskussion
+
+### Vurdering af modellens performance
+Modellen opnåede en **RMSE på 133.11** og en forklaringsgrad (R²) på 18.4%. Hvilket indikerer, at modellen kun forklarer 18.4% af variabiliteten i data. Resultaterne antyder, at væsentlige forklarende faktorer mangler, og modellen bør forbedres med yderligere data.
+
+### Vurdering af bidraget til løsningen af forretningsproblemet
+Modellen giver indsigt i faktorer som ugedage og modstanderens historik, der påvirker efterspørgslen. F.eks. viser data, at bundklubben Vejle trækker mange guldmenuer, hvilket kan skyldes sociale relationer eller arrangementer. Det er dog også med en vis statistisk usikkerhed, da de kun har mødt  Vejle fire gange i Superligaen 2013-2023.
+
+### Udrulning af anbefalingerne
+For at gøre modellen mere anvendelig anbefales:
+1. **Indsamling af yderligere data** som netværksaktiviteter og events.
+2. **Analyse af sociale faktorer** som mønstre i VIP-gæsters adfærd.
+3. **Løbende opdatering af modellen** med nye data for at forbedre præcisionen.
+4. **Lave en ny variabel** som indebærer de forskellige sponsorer, for at få indblik i deres brugeradfærd af guldmenuer.
+
+# Konklusion
+Lasso Regression-modellen viser potentiale for at forudsige efterspørgslen efter VIP-guldmenuer. Dog kræves yderligere variabler og løbende opdateringer for at opnå højere præcision og forretningsværdi. Konklusionen er, at modellen endnu ikke er tilstrækkelig præcis til praktisk anvendelse, sandsynligvis på grund af manglende data. Der er stadig mennesker hos Viborg F.F. (Palle), der skal vurdere hvor mange der kommer og afhenter guldmenuer til deres hjemmekampe.
+
+---
+```{r}
+#===============================================================================
+#                                 Introduktion
+#===============================================================================
+# Denne kode udfører en omfattende dataanalyse og databehandling med henblik på 
+# at opbygge et datasæt, der kan anvendes til at modellere og forudsige 
+# VIP-guldmenuafhentninger for Viborg FF (VFF). Workflowet omfatter alt fra 
+# dataindsamling og rengøring til oprettelse af nye variabler, udførelse af 
+# eksplorativ dataanalyse (EDA) og forberedelse til modellering. Vi benytter 
+# flere datakilder, herunder Excel-filer, webscraping fra Superstats og vejrdata
+# fra DMI.
+
+# Workflow
+
+# 1. Dataindsamling og første rengøring
+# Data fra forskellige kilder indlæses, og vi sikrer ensartethed i kolonnenavne 
+# og datatyper. Manglende værdier håndteres med strategier som median og glidende 
+# gennemsnit.
+
+# 2. Eksplorativ dataanalyse (EDA)
+# Visualiseringer som boxplots, histogrammer og korrelationsmatricer bruges til 
+# at identificere mønstre, outliers og sammenhænge mellem variabler. VIF-analyse
+# bruges til at fjerne multikollinearitet.
+
+# 3. Oprettelse af nye variabler
+# Vi opretter variabler baseret på tidligere møder, klassificering af modstandere 
+# og årstider for at styrke modellens forklaringskraft.
+
+# 4. Databehandling og forberedelse til modellering
+# Datasættet trimmes, irrelevant data fjernes, og variabler skaleres eller kodes,
+# så de er klar til at blive anvendt i forskellige modeller.
+
+# 5. Modellering
+# Vi implementerer og evaluerer modeller som baseline, Ridge og Lasso regression 
+# samt vurderer præstationen ved hjælp af metrikker som RMSE, MAE og R². Derudover 
+# analyserer vi residualplots for at sikre modellernes robusthed.
+
+# 6. Prediction
+# Vi anvender de trænerede modeller til at lave forudsigelser for kommende kampe, 
+# baseret på input som vejrdata og tidligere kampresultater.
+
+# Notation og kodestandard:
+# - Vi bruger lower_case til alle variabel- og kolonnenavne. 
+# - Navne er korte, men beskrivende, og specialtegn undgås for at sikre konsistens 
+#   og forståelighed.
+# - Kommentering fokuserer på at forklare rationalet bag beslutninger og gør det 
+#   lettere for læseren at følge workflowet.
+
+#===============================================================================
+#                                   Pacman
+#===============================================================================
+
+# Vi bruger pacman-pakken til at administrere og loade nødvendige R-pakker.
+# Fordele ved pacman:
+# 1. Automatisk installation: Hvis en pakke mangler, installerer pacman den for os.
+# 2. Effektivitet: Alle pakker loades med én funktion, så vi slipper for individuelle 'library()'-kald.
+# 3. Struktur: Giver en samlet oversigt over alle nødvendige pakker for projektet, hvilket øger genanvendeligheden.
+
+# Pacman sikrer, at vores miljø har de nødvendige værktøjer til datahåndtering, visualisering og modellering.
+# Her loader vi pakker, der er nødvendige for de forskellige dele af workflowet.
+
+pacman::p_load(
+  httr,          # Til at hente data fra API'er som DMI. API'er giver ofte data, som ikke kan downloades direkte som filer.
+  jsonlite,      # Gør det muligt at konvertere JSON-data (et typisk API-format) til tabeller i R.
+  tidyverse,     # En samling af pakker (fx ggplot2 og dplyr) til datamanipulation og visualisering. Gør koden mere konsistent og læsbar.
+  rvest,         # Til web scraping, fx for at hente data fra Superstats. Vi bruger dette til data, der ikke tilbydes via API'er.
+  readxl,        # Til indlæsning af Excel-filer, da mange organisationer gemmer data i Excel-format.
+  tidyr,         # Til datatransformation, fx bredt til langt format eller omvendt. Gør komplekse datasæt lettere at analysere.
+  glmnet,        # Implementerer Ridge og Lasso regression, som er avancerede metoder til at undgå overfitting i modeller.
+  boot,          # Bruges til krydsvalidering, som sikrer robust evaluering af vores modeller.
+  dplyr,         # Bruges til datafiltrering, transformation og aggregering. En del af tidyverse og central i datahåndtering.
+  stringr,       # Til avanceret tekstbehandling, fx når vi renser eller omstrukturerer tekstdata.
+  lubridate,     # Gør dato- og tidsmanipulation nemt, fx konvertering mellem datoformater eller udtrækning af årstider.
+  ggplot2,       # Visualisering af data. Hjælper med at skabe professionelle grafer og diagrammer.
+  car,           # Giver avancerede statistiske værktøjer som VIF, der bruges til at opdage multikollinearitet i regressionsmodeller.
+  corrplot,      # Bruges til at visualisere korrelationsmatricer. Gør det let at identificere stærke sammenhænge mellem variabler.
+  slider         # Til beregning af glidende gennemsnit og vinduer, fx når vi analyserer trends i tidsseriedata.
+)
+
+# Hvorfor gøre dette her i starten af koden?
+# 1. Det giver et samlet overblik over alle afhængigheder, hvilket gør projektet lettere at forstå for andre (og for os selv senere).
+# 2. Hvis nogen skal køre koden på deres egen maskine, vil denne del sikre, at alle nødvendige pakker er installeret og loadet.
+# 3. Hvis nye pakker bliver nødvendige under udviklingen, kan de nemt tilføjes til denne sektion, hvilket opretholder et struktureret workflow.
+
+# Bemærk: Før pacman kan bruges, skal det installeres manuelt én gang med:
+# install.packages("pacman")
+
+#===============================================================================
+#                      1. Dataindsamling og første rengøring
+#===============================================================================
+
+# ------------------------------------------------------------------------------
+# Læs og rengør excel_guld
+# ------------------------------------------------------------------------------
+
+# Vi indlæser en Excel-fil, der indeholder oplysninger om VIP-guldmenuer.
+# Datasættet kræver oprydning for at gøre det egnet til analyse.
+# VIGTIGT: Excel-filen skal lægge i en datamappe, der er placeret samme sted som r-filen
+
+excel_guld <- read_excel("data/Guld.xlsx") |>
+  dplyr::select(-Gule_poletter_stk, -Kamp) |>  # Fjern irrelevante kolonner.
+  na.omit()  # Fjern rækker med manglende værdier for at undgå fejl i analysen.
+
+# Konvertering af datoformat:
+# Datoen i datasættet er i tekstformat ("dd.mm.yyyy"). Vi konverterer dette til 
+# et standardiseret R-datoformat, der kan bruges til beregninger og visualisering.
+
+excel_guld <- excel_guld |>
+  mutate(dato = as.Date(Dato, format = "%d.%m.%Y"))
+
+# Hvis nogle datoer stadig ikke er læsbare (fx på grund af Excel-serienumre),
+# konverteres disse til gyldige datoer med 'origin = "1899-12-30"'.
+
+excel_guld$dato[is.na(excel_guld$dato)] <- as.Date(as.numeric(excel_guld$Dato[is.na(excel_guld$dato)]), 
+                                                   origin = "1899-12-30")
+
+# Oprydning af datasættet:
+# Vi fjerner den originale Dato-kolonne og reorganiserer variablerne for at gøre
+# datasættet mere overskueligt.
+
+excel_guld <- excel_guld |>
+  dplyr::select(-Dato) |>  # Fjern den gamle Dato-kolonne.
+  relocate(dato, .before = Guld_menu_stk)  # Flyt 'dato'-kolonnen til starten.
+
+# Konvertering af variabler:
+# 'Guld_menu_stk' konverteres til numerisk format og afrundes til nærmeste heltal
+# for at sikre konsistens og forberede til analyse.
+
+excel_guld <- excel_guld |> 
+  dplyr::select(-Antal_bestilte, -Antal_max) |>  # Fjern yderligere irrelevante kolonner.
+  mutate(guld_menu_stk = as.integer(as.numeric(Guld_menu_stk))) |> 
+  dplyr::select(-Guld_menu_stk)  # Fjern originalkolonnen efter konvertering.
+
+# Vis et hurtigt overblik over datasættets struktur og variabler:
+# Funktionen 'glimpse' giver os en idé om datastrukturen og datatyperne.
+
+glimpse(excel_guld)
+
+# ------------------------------------------------------------------------------
+# Visualisering af outliers
+# ------------------------------------------------------------------------------
+
+# Identifikation af outliers:
+# Vi bruger interkvartilområdet (IQR) til at finde observationer, der ligger
+# uden for 1.5 * IQR fra kvartilerne. Disse observationer betragtes som outliers.
+
+find_outliers <- function(x) {
+  iqr <- IQR(x, na.rm = TRUE)  # Beregn IQR.
+  lower_bound <- quantile(x, 0.25, na.rm = TRUE) - 1.5 * iqr  # Nedre grænse.
+  upper_bound <- quantile(x, 0.75, na.rm = TRUE) + 1.5 * iqr  # Øvre grænse.
+  x < lower_bound | x > upper_bound  # Returner TRUE for outliers.
+}
+
+# Vi identificerer outliers i 'Guld_menu_stk' og viser dem som en tabel for
+# bedre forståelse.
+
+outliers <- excel_guld |>
+  filter(find_outliers(guld_menu_stk)) |>  # Filtrer rækker med outliers.
+  dplyr::select(dato, guld_menu_stk)  # Vælg relevante kolonner.
+
+# Visualisering af outliers:
+# Vi bruger boxplots til at vise fordelingen af numeriske variabler og markerer
+# outliers med røde prikker.
+
+excel_guld |>
+  pivot_longer(cols = where(is.numeric), names_to = "variable", values_to = "value") |>
+  ggplot(aes(x = variable, y = value)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 16, outlier.size = 2) + 
+  coord_flip() +  # Roter diagrammet for bedre læsbarhed.
+  labs(
+    title = "Boxplots for numeriske kolonner",
+    x = "Variabel",
+    y = "Værdi"
+  ) +
+  theme_minimal()
+
+# Scatterplot:
+# Vi plotter 'Guld_menu_stk' mod 'dato' og markerer outliers med rød farve.
+
+excel_guld |>
+  mutate(is_outlier = find_outliers(guld_menu_stk)) |>
+  ggplot(aes(x = guld_menu_stk, y = dato)) +
+  geom_point(aes(colour = is_outlier), alpha = 0.6, size = 3) + 
+  scale_colour_manual(values = c("FALSE" = "black", "TRUE" = "red"), guide = "none") +
+  labs(
+    title = "Scatterplot med outliers markeret",
+    x = "Guld_menu_stk",
+    y = "Dato"
+  ) +
+  theme_minimal()
+
+# Udskrivning af identificerede outliers.
+print(outliers)
+
+# Behandling af outliers:
+# Vi markerer outliers som NA, så de kan håndteres senere.
+
+excel_guld <- excel_guld |> 
+  mutate(
+    guld_menu_stk = ifelse(
+      find_outliers(guld_menu_stk),  # Hvis observationen er en outlier,
+      NA,                            # marker den som NA.
+      guld_menu_stk                  # Behold den ellers som den er.
+    )
+  )
+
+# Håndtering af manglende værdier:
+# Vi erstatter NA med gennemsnittet af de øvrige værdier i 'Guld_menu_stk'.
+
+excel_guld <- excel_guld |> 
+  mutate(
+    guld_menu_stk = ifelse(
+      is.na(guld_menu_stk), 
+      round(mean(guld_menu_stk, na.rm = TRUE)),  # Erstat med afrundet gennemsnit.
+      guld_menu_stk
+    )
+  )
+
+# Endelig tjek af datasættet:
+# Vi udskriver det opdaterede datasæt for at sikre, at ændringerne er korrekte.
+
+print(excel_guld)
+
+# ===============================================================================
+#                      Læs og rengør Superstats-data
+# ===============================================================================
+
+# ------------------------------------------------------------------------------
+# Funktion til at validere en tabel
+# ------------------------------------------------------------------------------
+# Denne funktion tjekker, om en tabel indeholder gyldige data, som vi kan bruge.
+# Kriterierne er:
+# 1. Tabellen skal have rækker (dvs. ikke være tom).
+# 2. Tabellen skal indeholde kolonnerne 'X3', 'X4' og 'X5'.
+# 3. Mindst én af kolonnerne 'X3', 'X4' eller 'X5' skal indeholde gyldige værdier.
+valider_tabel <- function(tabel) {
+  nrow(tabel) > 0 &&  # Tjekker om tabellen ikke er tom
+    all(c("X3", "X4", "X5") %in% names(tabel)) &&  # Tjekker om kolonnerne findes
+    any(tabel$X3 != "" | tabel$X4 != "" | tabel$X5 != "")  # Tjekker om der er data i mindst én af kolonnerne
+}
+
+# ------------------------------------------------------------------------------
+# Funktion til at hente og filtrere tabeller for en enkelt sæson
+# ------------------------------------------------------------------------------
+# Denne funktion henter data fra Superstats.dk for en specifik sæson.
+# Den filtrerer tabellerne og tilføjer sæsonoplysninger til dataene.
+# Input: Årstal (fx 2013 for sæsonen 2013/2014).
+# Output: En tibble med data for den pågældende sæson.
+hent_superstats_data <- function(år) {
+  message("Har hentet data fra sæsonen: ", år, "/", år + 1)  # Statusbesked
+  
+  # Byg URL'en for den specifikke sæson
+  url <- paste0("https://superstats.dk/program?aar=", år, "%2F", år + 1)
+  
+  # Hent HTML-indhold og udtræk tabeller
+  alle_tabeller <- read_html(url, encoding = "UTF-8") |> 
+    html_elements("table") |>  # Finder tabellerne i HTML
+    html_table(header = FALSE, convert = FALSE)  # Konverterer tabellerne til R-objekter
+  
+  # Filtrer tabellerne, så kun de gyldige bliver tilbage
+  gyldige_tabeller <- purrr::keep(alle_tabeller, valider_tabel)  # Beholder kun tabeller, der opfylder kriterierne
+  
+  # Tilføj sæsonoplysninger og kombiner tabellerne til én tibble
+  purrr::map_dfr(gyldige_tabeller, ~ as_tibble(.x) |> mutate(sæson = paste0(år, "/", år + 1)))
+}
+
+# ------------------------------------------------------------------------------
+# Hent og rengør data for alle sæsoner (2013-2023)
+# ------------------------------------------------------------------------------
+# Vi henter data fra Superstats.dk for sæsonerne 2013-2023 og udfører følgende trin:
+# 1. Fjern irrelevante kolonner ('X1', 'X6', 'X7', 'X8').
+# 2. Fjern rækker uden gyldige værdier i 'X3', 'X4' eller 'X5'.
+# 3. Filtrér data, så kun VFF-kampe og hjemmekampe inkluderes.
+
+superstats <- purrr::map_dfr(2013:2023, hent_superstats_data) |> 
+  dplyr::select(-X1, -X6, -X7, -X8) |>  # Fjern kolonner, der ikke er nødvendige
+  filter(!(X3 == "" & X4 == "" & X5 == ""))  # Fjern rækker uden værdier i relevante kolonner
+
+# ------------------------------------------------------------------------------
+# Filtrér og rengør data for VFF-hjemmekampe
+# ------------------------------------------------------------------------------
+superstats_vff <- superstats |> 
+  filter(str_detect(X3, "VFF")) |>  # Behold kun rækker, hvor kolonnen 'X3' indeholder "VFF" (dvs. VFF-kampe)
+  rename(
+    dato = X2,               # Omdøb 'X2' til 'dato', som repræsenterer kampdatoen
+    kamp = X3,               # Omdøb 'X3' til 'kamp', som indeholder kampnavne
+    resultat = X4,           # Omdøb 'X4' til 'resultat', som indeholder kampresultater
+    antal_tilskuere = X5     # Omdøb 'X5' til 'antal_tilskuere', som angiver antal tilskuere
+  ) |> 
+  filter(str_starts(kamp, "VFF")) |>  # Behold kun rækker, hvor 'kamp' starter med "VFF" (hjemmekampe)
+  mutate(
+    dato = as.Date(dato, format = "%d/%m"),  # Konverter dato fra tekstformat (dd/mm) til en gyldig R-dato
+    måned = as.numeric(format(dato, "%m")),  # Uddrag månedsnummer fra dato
+    årstal = ifelse(                         # Bestem årstal baseret på måneden
+      måned >= 7,                            # Hvis måneden er juli eller senere
+      as.numeric(substr(sæson, 1, 4)),       # Brug første år i sæsonen
+      as.numeric(substr(sæson, 6, 9))        # Ellers brug andet år i sæsonen
+    ),
+    dato = as.Date(paste(årstal, format(dato, "%m-%d"), sep = "-")),  # Kombinér årstal, måned og dag til en komplet dato
+    antal_tilskuere = as.numeric(str_replace_all(antal_tilskuere, "\\.", ""))  # Fjern punktummer og konverter til numerisk
+  ) |> 
+  dplyr::select(-måned, -årstal)  # Fjern midlertidige kolonner, der ikke længere er nødvendige
+
+# ------------------------------------------------------------------------------
+# Tjek datastrukturen
+# ------------------------------------------------------------------------------
+# Vi bruger glimpse til at få et overblik over datasættet og sikre, at det ser ud, som vi forventer.
+glimpse(superstats_vff)
+
+# ------------------------------------------------------------------------------
+# Læs og rengør DMI-data
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Opret en vektor med kampdatoer for hjemmekampe
+# ------------------------------------------------------------------------------
+
+# Vi laver en vektor, der indeholder datoerne for hjemmekampe i formatet "YYYY-MM-DD".
+# Dette format bruges, fordi det er påkrævet af DMI's API for at hente data.
+hjemmekampe_datoer <- format(superstats_vff$dato, "%Y-%m-%d")
+
+# ------------------------------------------------------------------------------
+# Basisinformation til DMI API
+# ------------------------------------------------------------------------------
+# Vi definerer basisinformation for API-kald til DMI:
+# - base_url: URL'en for API'ets endpoint.
+# - info_url: Endpointet, der bruges til at hente meteorologiske observationer.
+# - station_id: Identifikatoren for den vejrstation, vi ønsker data fra.
+# - api_key: API-nøglen, der giver adgang til data.
+
+base_url <- "https://dmigw.govcloud.dk/v2/"
+info_url <- "metObs/collections/observation/items?"
+station_id <- "stationId=06060"  # Identifikator for vejrstationen
+api_key <- "&api-key=8c762424-f683-4ad0-acea-197dc19ff258"  # API-nøgle
+
+# ------------------------------------------------------------------------------
+# Funktion til at konstruere forespørgsels-URL
+# ------------------------------------------------------------------------------
+# Denne funktion genererer en fuldstændig URL, der kan bruges til at hente data fra API'et.
+lav_dmi_url <- function(dato) {
+  paste0(
+    base_url, info_url, station_id,          # Basisinformation om API'et
+    "&datetime=", dato, "T16:00:00Z/", dato, "T16:00:00Z",  # Tidsramme for observationer
+    "&limit=100000", api_key                 # Begrænsning på antal rækker og API-nøgle
+  )
+}
+
+# ------------------------------------------------------------------------------
+# Funktion til at hente data for én dato via API
+# ------------------------------------------------------------------------------
+# Denne funktion udfører et API-kald for en specifik dato og returnerer dataen, hvis tilgængelig.
+hent_dmi_data <- function(dato) {
+  fuld_url <- lav_dmi_url(dato)  # Generér URL for datoen
+  api_call <- httr::GET(fuld_url, httr::timeout(10))  # Udfør API-kald med timeout på 10 sekunder
+  
+  if (httr::status_code(api_call) == 200) {  # Succesfuldt API-kald
+    api_json <- httr::content(api_call, as = "text", encoding = "UTF-8") |> 
+      jsonlite::fromJSON(flatten = TRUE)  # Parse JSON-data
+    
+    if (!is.null(api_json$features) && length(api_json$features) > 0) {  # Data findes
+      message("Data hentet succesfuldt for dato: ", dato)
+      return(api_json$features)  # Returner data
+    } else {  # Ingen data for datoen
+      message("Ingen data for dato: ", dato)
+      return(NULL)
+    }
+  } else {  # Fejl i API-kald
+    message("Fejl i API-kald for dato: ", dato, " - Statuskode: ", httr::status_code(api_call))
+    return(NULL)
+  }
+}
+
+# ------------------------------------------------------------------------------
+# Hent data for alle hjemmekampe
+# ------------------------------------------------------------------------------
+# Iterér over alle datoer og hent data for hver kampdato via API'et.
+dmi_data <- purrr::map(hjemmekampe_datoer, hent_dmi_data)
+names(dmi_data) <- hjemmekampe_datoer  # Navngiv listen med kampdatoer
+
+# ------------------------------------------------------------------------------
+# Kombiner og rengør data fra DMI
+# ------------------------------------------------------------------------------
+# Omstrukturer data til bredt format og fjern irrelevante kolonner.
+dmi_variabler <- purrr::map_dfr(names(dmi_data), function(dato) {
+  if (!is.null(dmi_data[[dato]])) {
+    dmi_data[[dato]] |> 
+      as_tibble() |> 
+      dplyr::select(
+        Observationstidspunkt = properties.observed,
+        Observationer = properties.parameterId,
+        Værdi = properties.value
+      ) |> 
+      mutate(
+        Observationstidspunkt = lubridate::ymd_hms(Observationstidspunkt),  # Konverter tidspunkter
+        dato = as.Date(dato)  # Tilføj kampdato
+      )
+  }
+}) |> 
+  tidyr::pivot_wider(names_from = Observationer, values_from = Værdi) |> 
+  dplyr::select(-Observationstidspunkt)
+
+# ------------------------------------------------------------------------------
+# Fjern irrelevante variabler
+# ------------------------------------------------------------------------------
+# Vi fjerner kolonner, der indeholder minimum, maksimum, eller midlingsværdier, da de ikke er nødvendige.
+dmi_variabler <- dmi_variabler |> 
+  dplyr::select(-contains("min"), -contains("max"), -contains("1h"), -contains("mean"))
+
+# ------------------------------------------------------------------------------
+# Håndtering af variabler med mange manglende værdier
+# ------------------------------------------------------------------------------
+# Kolonnen 'weather' indeholder mange NA-værdier, men vi kan stadig udlede nyttig information.
+# Vi opretter en dummy-variabel for nedbør baseret på API-dokumentation.
+dmi_variabler <- dmi_variabler |> 
+  mutate(
+    nedbør = if_else(
+      weather %in% c(121, 123, 124, 125, 126, 140:149, 150:159, 160:169, 170:179, 180:189, 190:199),
+      1,  # Nedbør til stede
+      0   # Ingen nedbør
+    )
+  ) |> 
+  dplyr::select(-weather)  # Fjern den oprindelige 'weather'-kolonne
+
+# ------------------------------------------------------------------------------
+# Udfyld manglende værdier med medianer
+# ------------------------------------------------------------------------------
+# For at sikre datasættets konsistens udfylder vi alle manglende værdier med kolonne-medianer.
+dmi_variabler <- dmi_variabler |> 
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
+# ------------------------------------------------------------------------------
+# Kontroller datastruktur
+# ------------------------------------------------------------------------------
+# Vi bruger glimpse til at få et overblik over datasættet og sikre, at det er i korrekt format.
+glimpse(dmi_variabler)
+
+# ------------------------------------------------------------------------------
+# Dokumentation for Meterological Observation Data
+# ------------------------------------------------------------------------------
+# Dokumentation for variabler kan findes her:
+# https://opendatadocs.dmi.govcloud.dk/en/Data/Meteorological_Observation_Data
+
+# ------------------------------------------------------------------------------
+# Vi samler de tre datasæt
+# ------------------------------------------------------------------------------
+
+# Her samler vi data fra de tre tidligere forberedte datasæt:
+# 1. `excel_guld`: Indeholder oplysninger om VIP-guldmenuer.
+# 2. `superstats_vff`: Indeholder kampdata for VFF's hjemmekampe.
+# 3. `dmi_variabler`: Indeholder meteorologiske observationer for kampdage.
+
+# Ved at bruge `inner_join` sikrer vi, at kun rækker med matchende `dato` i alle tre
+# datasæt inkluderes i det endelige datasæt `joins_samlet`.
+
+joins_samlet <- excel_guld |> 
+  inner_join(superstats_vff, by = "dato") |>  # Sammenkæd Excel-data med Superstats-data baseret på `dato`.
+  inner_join(dmi_variabler, by = "dato")      # Tilføj DMI-data ved at matche på `dato`.
+
+# ------------------------------------------------------------------------------
+# Tjek datasættet for struktur og NA-værdier
+# ------------------------------------------------------------------------------
+
+# Vi bruger `glimpse` for at få et hurtigt overblik over datastrukturen.
+# Dette giver os indsigt i variabelnavne, datatyper og eksempler på værdier.
+glimpse(joins_samlet)
+
+# `colSums(is.na(joins_samlet))` giver en oversigt over, hvor mange manglende værdier
+# der er i hver kolonne. Dette hjælper med at identificere variabler, der skal håndteres
+# yderligere (fx imputering af manglende værdier eller fjernelse af variabler).
+colSums(is.na(joins_samlet))
+
+# Ved at kombinere disse trin sikrer vi, at det samlede datasæt er klart til
+# yderligere analyse og modellering.
+
+#===============================================================================
+#                         2. Oprettelse af nye variabler
+#===============================================================================
+
+# ------------------------------------------------------------------------------
+# Tilføj ugedag og årstider
+# ------------------------------------------------------------------------------
+# Vi tilføjer variabler, der repræsenterer ugedagen og årstiden for hver kampdato.
+# Dette kan bruges til at identificere mønstre i data, som fx hvilke ugedage eller
+# årstider der har flere VIP-guldmenuer.
+
+joins_samlet_variabler <- joins_samlet |> 
+  mutate(
+    ugedag = as.factor(weekdays(dato)),  # Konverter kampdato til ugedag som kategorisk variabel.
+    aarstid = case_when(  # Opdel kampdato i årstider baseret på månedsnummer.
+      month(dato) %in% c(12, 1, 2) ~ "Vinter",
+      month(dato) %in% c(3, 4, 5) ~ "Forår",
+      month(dato) %in% c(6, 7, 8) ~ "Sommer",
+      month(dato) %in% c(9, 10, 11) ~ "Efterår"
+    ) |> factor(levels = c("Vinter", "Forår", "Sommer", "Efterår"))  # Sørg for logisk rækkefølge.
+  ) |> 
+  relocate(ugedag, .after = dato) |>  # Flyt 'ugedag' tættere på 'dato' for bedre overskuelighed.
+  relocate(aarstid, .after = ugedag)  # Flyt 'aarstid' lige efter 'ugedag'.
+
+# ------------------------------------------------------------------------------
+# Tilføj modstanderkategorier
+# ------------------------------------------------------------------------------
+# Vi opretter variabler for modstanderen og dens kategori baseret på kampens modstander.
+# Modstanderne kategoriseres som 'Topklub', 'Midterklub' eller 'Bundklub' afhængigt
+# af deres relative styrke.
+
+joins_samlet_variabler <- joins_samlet_variabler |> 
+  mutate(
+    modstander = kamp |>  # Ekstraher modstanderens navn fra kampens tekst.
+      str_remove(".*VFF-") |> 
+      str_trim() |> 
+      as.factor(),
+    modstander_kategori = case_when(  # Kategorisér modstanderen i tre niveauer.
+      modstander %in% c("FCK", "FCM", "BIF", "AGF") ~ "Topklub",
+      modstander %in% c("SIF", "RFC", "FCN", "AAB") ~ "Midterklub",
+      TRUE ~ "Bundklub"
+    ) |> factor(levels = c("Topklub", "Midterklub", "Bundklub"))
+  ) |> 
+  relocate(modstander, .after = kamp) |>  # Flyt 'modstander' tættere på 'kamp'.
+  relocate(modstander_kategori, .after = modstander)  # Placér 'modstander_kategori' efter 'modstander'.
+
+# ------------------------------------------------------------------------------
+# Tilføj tilskuere fra sidste møde
+# ------------------------------------------------------------------------------
+# Vi tilføjer en variabel, der angiver antallet af tilskuere fra den foregående kamp
+# mod samme modstander. Dette kan bruges til at analysere trends mellem kampe.
+
+joins_samlet_variabler <- joins_samlet_variabler |> 
+  arrange(modstander, dato) |>  # Sortér efter modstander og kampdato for korrekt kronologisk beregning.
+  group_by(modstander) |>  # Gruppér data efter modstander.
+  mutate(
+    tilskuere_sidste_møde = lag(antal_tilskuere),  # Brug 'lag' til at finde tilskuere fra sidste møde.
+    tilskuere_sidste_møde = ifelse(
+      is.na(tilskuere_sidste_møde), 
+      slide_dbl(antal_tilskuere, mean, .before = 2, .complete = TRUE),  # Brug gennemsnit af de seneste 3 kampe.
+      tilskuere_sidste_møde
+    ),
+    tilskuere_sidste_møde = ifelse(
+      is.na(tilskuere_sidste_møde), 
+      median(antal_tilskuere, na.rm = TRUE),  # Brug medianen som fallback for at håndtere manglende værdier.
+      tilskuere_sidste_møde
+    )
+  ) |> 
+  ungroup() |>  # Fjern gruppering for at undgå utilsigtede påvirkninger.
+  arrange(dato) |>  # Gendan oprindelig rækkefølge efter dato.
+  relocate(tilskuere_sidste_møde, .after = antal_tilskuere)  # Placér 'tilskuere_sidste_møde' efter 'antal_tilskuere'.
+
+# ------------------------------------------------------------------------------
+# Tilføj guldmenuer fra sidste møde
+# ------------------------------------------------------------------------------
+# Vi opretter en variabel, der repræsenterer antallet af guldmenuer, der blev afhentet
+# ved det sidste møde mod samme modstander.
+
+joins_samlet_variabler <- joins_samlet_variabler |> 
+  arrange(modstander, dato) |>  # Sortér efter modstander og kampdato.
+  group_by(modstander) |>  # Gruppér efter modstander.
+  mutate(
+    guld_menuer_sidste_møde = lag(guld_menu_stk),  # Brug 'lag' til at finde guldmenuer fra sidste møde.
+    guld_menuer_sidste_møde = ifelse(
+      is.na(guld_menuer_sidste_møde), 
+      slide_dbl(guld_menu_stk, mean, .before = 2, .complete = TRUE),  # Brug gennemsnit fra de seneste 3 kampe.
+      guld_menuer_sidste_møde
+    ),
+    guld_menuer_sidste_møde = ifelse(
+      is.na(guld_menuer_sidste_møde), 
+      median(guld_menu_stk, na.rm = TRUE),  # Brug median som fallback.
+      guld_menuer_sidste_møde
+    )
+  ) |> 
+  ungroup() |>  # Fjern gruppering.
+  arrange(dato) |>  # Gendan dato-rækkefølge.
+  relocate(guld_menuer_sidste_møde, .after = guld_menu_stk)  # Placér variablen lige efter 'guld_menu_stk'.
+
+# ------------------------------------------------------------------------------
+# Inddel modstanderne i kategorier ud fra antal af guldmenuer
+# ------------------------------------------------------------------------------
+# Vi opretter en kategori baseret på antallet af guldmenuer, der afhentes mod
+# forskellige modstandere.
+
+joins_samlet_variabler <- joins_samlet_variabler |> 
+  mutate(
+    guld_menu_kategori = case_when(
+      modstander %in% c("HIF", "VB") ~ "A",  # Modstandere med lavere antal guldmenuer.
+      modstander %in% c("BIF", "OB", "FCM", "AGF") ~ "B",  # Modstandere med middel antal.
+      TRUE ~ "C"  # Modstandere med højere antal guldmenuer.
+    )
+  ) |> 
+  relocate(guld_menu_kategori, .after = guld_menuer_sidste_møde)  # Placér variablen efter 'guld_menuer_sidste_møde'.
+
+# ------------------------------------------------------------------------------
+# Hjælpefunktion til at beregne point fra kampresultat
+# ------------------------------------------------------------------------------
+# Denne funktion tager kampresultatet som input (fx "2-1") og beregner point:
+# - 3 point for en sejr
+# - 1 point for uafgjort
+# - 0 point for et nederlag
+# Funktionen returnerer NA, hvis resultatet ikke er gyldigt.
+
+parse_result <- function(result) {
+  # Ekstraherer tallene fra resultatet (fx "2-1" -> c(2, 1))
+  scores <- as.numeric(str_extract_all(result, "\\d+")[[1]])
+  
+  # Beregner point baseret på scoren
+  case_when(
+    scores[1] > scores[2] ~ 3,   # Hjemmesejr
+    scores[1] == scores[2] ~ 1,  # Uafgjort
+    scores[1] < scores[2] ~ 0,   # Hjemmenederlag
+    TRUE ~ NA_real_              # Returnerer NA for manglende eller ugyldige data
+  )
+}
+
+# ------------------------------------------------------------------------------
+# Tilføj point for de seneste 3 kampe
+# ------------------------------------------------------------------------------
+# Vi beregner den samlede pointscore for de seneste 3 kampe og tilføjer resultatet
+# som en ny kolonne, "point_sidste_3_kampe". Dette giver os et overblik over
+# holdets form i de seneste kampe.
+
+joins_samlet_variabler <- joins_samlet_variabler |> 
+  mutate(
+    # Beregn point for de seneste 3 kampe ved at summere pointene
+    point_sidste_3_kampe = rowSums(
+      cbind(
+        # Punkt 1: Beregn point fra den seneste kamp
+        lag(resultat, 1) |> purrr::map_dbl(~ parse_result(.x)),
+        
+        # Punkt 2: Beregn point fra den næstseneste kamp
+        lag(resultat, 2) |> purrr::map_dbl(~ parse_result(.x)),
+        
+        # Punkt 3: Beregn point fra den tredje seneste kamp
+        lag(resultat, 3) |> purrr::map_dbl(~ parse_result(.x))
+      ),
+      na.rm = TRUE  # Ignorer manglende værdier (fx hvis der ikke er data for 3 kampe)
+    )
+  ) |> 
+  # Flyt den nye kolonne, så den kommer lige efter "resultat" for bedre overskuelighed
+  relocate(point_sidste_3_kampe, .after = resultat)
+
+# ------------------------------------------------------------------------------
+# Kontrol af datasæt
+# ------------------------------------------------------------------------------
+# Vi bruger `glimpse` til at undersøge strukturen af datasættet og sikre,
+# at den nye variabel "point_sidste_3_kampe" er tilføjet korrekt.
+glimpse(joins_samlet_variabler)
+
+#===============================================================================
+#                      3. Eksplorativ dataanalyse (EDA)
+#===============================================================================
+
+# ------------------------------------------------------------------------------
+# Udtræk kun numeriske variabler fra `joins_samlet`
+# ------------------------------------------------------------------------------
+# Vi filtrerer datasættet til kun at indeholde numeriske variabler for at kunne 
+# udføre kvantitative analyser som korrelation og lineære modeller.
+joins_samlet_numerisk <- joins_samlet_variabler |> 
+  dplyr::select(where(is.numeric))
+
+# ------------------------------------------------------------------------------
+# Histogram der viser hvor mange guldmenuer der afsættes 2013-2023
+# ------------------------------------------------------------------------------
+# Beregn gennemsnittet af guldmenuer for hele perioden.
+gennemsnit_2013_2023 <- joins_samlet_numerisk |> 
+  summarise(gennemsnit = round(mean(guld_menu_stk, na.rm = TRUE))) |> 
+  pull(gennemsnit)
+
+# Visualiser fordelingen af guldmenuer med et histogram og marker gennemsnittet.
+joins_samlet_numerisk |> 
+  ggplot(aes(x = guld_menu_stk)) +
+  geom_histogram(binwidth = 150, fill = "blue", alpha = 0.7, boundary = 0) +
+  geom_vline(xintercept = gennemsnit_2013_2023, color = "red", linetype = "dashed", size = 1) +
+  labs(
+    title = "Histogram over 'guld_menu_stk' (2013-2023)",
+    subtitle = paste0("Gennemsnit: ", round(gennemsnit_2013_2023, 2)),
+    x = "Antal guldmenuer afhentet",
+    y = "Frekvens"
+  ) +
+  theme_minimal()
+
+# ------------------------------------------------------------------------------
+# Udviklingen af afsatte guldmenuer i perioden
+# ------------------------------------------------------------------------------
+# Visualiser udviklingen af guldmenuer over tid med en lineær tendenslinje.
+joins_samlet |> 
+  ggplot(aes(x = dato, y = guld_menu_stk)) +
+  geom_line(color = "blue", size = 1, alpha = 0.5) +
+  geom_point(color = "black", size = 1.5) +
+  geom_smooth(method = "lm", color = "red", se = FALSE, size = 1) +  # Tilføj lineær tendenslinje
+  labs(
+    title = "Udvikling af 'guld_menu_stk' med lineær tendenslinje",
+    x = "Dato",
+    y = "Antal guldmenuer afhentet"
+  ) +
+  theme_minimal()
+
+# ------------------------------------------------------------------------------
+# Histogram der viser hvor mange guldmenuer der afsættes 2020-2023
+# ------------------------------------------------------------------------------
+# Filtrér data for perioden 2020/2021 og frem.
+joins_samlet_2020_frem <- joins_samlet |> 
+  filter(dato >= as.Date("2020-07-01"))
+
+# Beregn gennemsnittet for denne nyere periode.
+gennemsnit_2020_frem <- joins_samlet_2020_frem |> 
+  summarise(gennemsnit = round(mean(guld_menu_stk, na.rm = TRUE))) |> 
+  pull(gennemsnit)
+
+# Visualiser data for denne periode med et histogram og marker gennemsnittet.
+joins_samlet_2020_frem |> 
+  ggplot(aes(x = guld_menu_stk)) +
+  geom_histogram(binwidth = 150, fill = "blue", alpha = 0.7, boundary = 0) +
+  geom_vline(xintercept = gennemsnit_2020_frem, color = "red", linetype = "dashed", size = 1) +
+  labs(
+    title = "Histogram over 'guld_menu_stk' (2020-2023)",
+    subtitle = paste0("Gennemsnit: ", round(gennemsnit_2020_frem, 2)),
+    x = "Antal guldmenuer afhentet",
+    y = "Frekvens"
+  ) +
+  theme_minimal()
+
+# ------------------------------------------------------------------------------
+# Korrellationsmatrix
+# ------------------------------------------------------------------------------
+# Beregn korrelationsmatrix for numeriske variabler og afrund værdierne.
+cor_matrix <- cor(joins_samlet_numerisk, use = "pairwise.complete.obs")
+cor_matrix_rounded <- round(cor_matrix, 2)
+
+# Visualiser korrelationer mellem variabler.
+corrplot(cor_matrix, method = "circle", type = "lower", tl.cex = 0.8)
+
+# Fjern stærkt korrelerede variabler, som kan medføre multikollinearitet.
+joins_samlet_numerisk <- joins_samlet_numerisk |> 
+  dplyr::select(-pressure_at_sea, -temp_grass, -temp_dew)
+
+# Gem listen over fjernede variabler til fremtidig reference.
+stærkt_korrelerede_variabler <- c("pressure_at_sea", "temp_grass", "temp_dew")
+
+# ------------------------------------------------------------------------------
+# Lav en lineær model med numeriske variabler og beregn VIF
+# ------------------------------------------------------------------------------
+# Byg en lineær model for at undersøge multikollinearitet med Variance Inflation Factor (VIF).
+model <- lm(guld_menu_stk ~ ., data = joins_samlet_numerisk)
+vif_values <- vif(model)  # Beregn VIF-værdier.
+
+# Identificér variabler med høj VIF, der kan indikere redundans.
+high_vif <- vif_values[vif_values > 5]
+print("Variabler med høj VIF (over 5):")
+print(high_vif)
+# Vi er opmærksomme på humidity, men bevidste om at Ridge og Lasso kan håndtere variabler med en høj VIF
+
+# ------------------------------------------------------------------------------
+# Visualisering af ny korrelationsmatrix efter fjernelse af korrelerede variabler
+# ------------------------------------------------------------------------------
+cor_matrix <- cor(joins_samlet_numerisk, use = "pairwise.complete.obs")
+cor_matrix_rounded <- round(cor_matrix, 2)
+
+# Visualiser opdateret korrelationsmatrix.
+corrplot(cor_matrix, method = "circle", type = "lower", tl.cex = 0.8)
+
+# ------------------------------------------------------------------------------
+# Kontrol af datasættets struktur
+# ------------------------------------------------------------------------------
+# Tjek datasættet for at sikre, at de ønskede ændringer er blevet anvendt korrekt.
+glimpse(joins_samlet_variabler)
+
+
+#===============================================================================
+#                  4. Forberedelse af data til modellering
+#===============================================================================
+
+# ------------------------------------------------------------------------------
+# Fjernelse af irrelevante variabler
+# ------------------------------------------------------------------------------
+# Vi fjerner variabler, der ikke er nødvendige for vores analyse eller modellering.
+# Dette inkluderer dato, kamp, modstander, sæson, resultat og stærkt korrelerede variabler,
+# som vi tidligere har identificeret og lagret i `stærkt_korrelerede_variabler`.
+joins_samlet_model <- joins_samlet_variabler |> 
+  dplyr::select(
+    -dato,                              # Fjern dato, da den ikke direkte bidrager til modellen.
+    -kamp,                              # Fjern kampnavn, da det ikke har numerisk eller kategorisk værdi.
+    -modstander,                        # Fjern modstandernavn, da vi har kategoriseret det.
+    -sæson,                             # Fjern sæson, da det ikke er relevant for modellen.
+    -resultat,                          # Fjern kampresultat, da vi allerede har udledt point derfra.
+    -all_of(stærkt_korrelerede_variabler)  # Fjern stærkt korrelerede variabler for at reducere redundans.
+  )
+
+# Tjek datasættets struktur og de resterende variabler
+glimpse(joins_samlet_model)
+
+# ------------------------------------------------------------------------------
+# Omdøbning af kolonner for bedre læsbarhed
+# ------------------------------------------------------------------------------
+# Vi ændrer kolonnenavne til mere beskrivende og letforståelige danske navne.
+joins_samlet_model <- joins_samlet_model |> 
+  rename(
+    vindretning = wind_dir,             # Vindretning
+    lufttryk = pressure,                # Lufttryk
+    luftfugtighed = humidity,           # Luftfugtighed
+    vindhastighed = wind_speed,         # Vindhastighed
+    lufttemperatur = temp_dry,          # Lufttemperatur
+    sigtbarhed = visibility,            # Sigtbarhed
+    skydække = cloud_cover,             # Skydække
+    skyhøjde = cloud_height             # Skyhøjde
+  )
+
+# ------------------------------------------------------------------------------
+# Konvertering af datatyper
+# ------------------------------------------------------------------------------
+# Vi sikrer, at variablerne har de rigtige datatyper (numerisk eller kategorisk),
+# som krævet for modellering og analyse.
+joins_samlet_model <- joins_samlet_model |> 
+  mutate(
+    ugedag = as.factor(ugedag),                   # Konverter ugedag til kategorisk variabel.
+    aarstid = as.factor(aarstid),                 # Konverter årstid til kategorisk variabel.
+    guld_menu_stk = as.numeric(guld_menu_stk),    # Konverter til numerisk format.
+    guld_menuer_sidste_møde = as.numeric(guld_menuer_sidste_møde),  # Konverter til numerisk format.
+    guld_menu_kategori = as.factor(guld_menu_kategori),  # Konverter til kategorisk variabel.
+    modstander_kategori = as.factor(modstander_kategori),  # Konverter til kategorisk variabel.
+    point_sidste_3_kampe = as.numeric(point_sidste_3_kampe),  # Konverter til numerisk format.
+    antal_tilskuere = as.numeric(antal_tilskuere),  # Konverter til numerisk format.
+    tilskuere_sidste_møde = as.numeric(tilskuere_sidste_møde),  # Konverter til numerisk format.
+    vindretning = as.numeric(vindretning),        # Konverter til numerisk format.
+    lufttryk = as.numeric(lufttryk),              # Konverter til numerisk format.
+    luftfugtighed = as.numeric(luftfugtighed),    # Konverter til numerisk format.
+    vindhastighed = as.numeric(vindhastighed),    # Konverter til numerisk format.
+    lufttemperatur = as.numeric(lufttemperatur),  # Konverter til numerisk format.
+    sigtbarhed = as.numeric(sigtbarhed),          # Konverter til numerisk format.
+    skydække = as.numeric(skydække),             # Konverter til numerisk format.
+    skyhøjde = as.numeric(skyhøjde),             # Konverter til numerisk format.
+    nedbør = as.numeric(nedbør)                  # Konverter til numerisk format.
+  )
+
+# -----------------------------------------------------------------------------
+# Dataopsummering
+# ------------------------------------------------------------------------------
+# Beregn og print en række nøgleoplysninger om datasættet for at sikre, at det er klar til modellering.
+
+# Antal observationer (rækker)
+antal_observationer <- nrow(joins_samlet_model)
+print(paste("Antal observationer:", antal_observationer))
+
+# Antal numeriske variabler
+antal_numeriske <- joins_samlet_model |> 
+  dplyr::select(where(is.numeric)) |> 
+  ncol()
+print(paste("Antal numeriske variabler:", antal_numeriske))
+
+# Antal kategoriske variabler
+antal_kategoriske <- joins_samlet_model |> 
+  dplyr::select(where(is.factor)) |> 
+  ncol()
+print(paste("Antal kategoriske variabler:", antal_kategoriske))
+
+# Andelen af manglende værdier (efter imputering)
+missing_values <- colSums(is.na(joins_samlet_model))  # Beregn antal manglende værdier per variabel.
+missing_percentage <- round((sum(missing_values) / (antal_observationer * ncol(joins_samlet_model))) * 100, 2)
+print(paste("Andel af manglende værdier (efter imputering):", missing_percentage, "%"))
+
+#===============================================================================
+#                               5. Modeller
+#===============================================================================
+# 0-Feature Model (Baseline)
+# En baseline-model uden nogen prædiktorer.
+# Denne model forudsiger altid middelværdien af målvariablen (Guld_menu_stk).
+# Bruges som referencepunkt for mere avancerede modeller.
+
+set.seed(42)
+train <- sample(1:nrow(joins_samlet_model), nrow(joins_samlet_model) * 2/3)  # 2/3 af data som træning.
+test <- (-train)  # Resten som testdata.
+y <- joins_samlet_model$guld_menu_stk  # Definer målvariabel.
+y.test <- y[test]  # Definer målvariabel for testdata.
+glm.fit <- glm(guld_menu_stk ~ 1, data = joins_samlet_model[train, ])  # Baseline-model.
+rmse_0_cv <- sqrt(cv.glm(joins_samlet_model[train, ], glm.fit, K = 5)$delta[1])  # RMSE fra krydsvalidering.
+rmse_0_test <- sqrt(mean((y.test - predict(glm.fit, joins_samlet_model[test, ]))^2))  # RMSE for testdata.
+
+rmse_0_test  # Udskriv RMSE for baseline-modellen.
+
+# ------------------------------------------------------------------------------
+# Ridge Regression
+# ------------------------------------------------------------------------------
+set.seed(42)
+
+# Definer designmatrix og målvariabel for Ridge Regression.
+x <- model.matrix(guld_menu_stk ~ ., data = joins_samlet_model)[, -1]  # Fjern intercept.
+y <- joins_samlet_model$guld_menu_stk  # Målvariabel.
+grid <- 10^seq(10, -2, length = 100)  # Generer 100 lambda-værdier mellem 10^10 og 10^-2.
+
+# Ridge-regression med krydsvalidering.
+ridge.mod <- glmnet(x[train, ], y[train], alpha = 0, lambda = grid)  # Ridge regression.
+cv.ridge <- cv.glmnet(x[train, ], y[train], alpha = 0, lambda = grid)  # Krydsvalidering.
+bestlam_ridge <- cv.ridge$lambda.min  # Optimal lambda.
+
+# Forudsigelser og beregning af RMSE for testdata.
+ridge_pred <- predict(ridge.mod, s = bestlam_ridge, newx = x[test, ])  # Forudsigelser.
+rmse_ridge_test <- sqrt(mean((ridge_pred - y.test)^2))  # RMSE for testdata.
+cat("RMSE for Ridge Regression:", rmse_ridge_test, "\n")  # Udskriv RMSE.
+
+# Udtræk koefficienter for den optimale lambda.
+ridge_coefs <- coef(ridge.mod, s = bestlam_ridge)
+
+# Konverter koefficienterne til en læsbar data frame.
+ridge_coefs_df <- data.frame(
+  Variable = rownames(ridge_coefs),           # Navne på variabler.
+  Coefficient = as.numeric(ridge_coefs)      # Værdier af koefficienter.
+)
+
+# Fjern variabler med 0-koefficienter (for bedre overblik).
+ridge_coefs_df <- ridge_coefs_df[ridge_coefs_df$Coefficient != 0, ]
+
+# Print resultaterne.
+print(ridge_coefs_df)
+
+# ------------------------------------------------------------------------------
+# Lasso Regression
+# ------------------------------------------------------------------------------
+set.seed(42)
+
+# Designmatrix og målvariabel for Lasso Regression.
+x <- model.matrix(guld_menu_stk ~ ., joins_samlet_model)[, -1]  # Skaber designmatrix.
+y <- joins_samlet_model$guld_menu_stk  # Målvariabel (genbrugt fra før).
+grid <- 10^seq(10, -2, length = 100)  # Generer 100 lambda-værdier mellem 10^10 og 10^-2.
+
+# Lasso-regression med krydsvalidering.
+lasso.mod <- glmnet(x[train, ], y[train], alpha = 1, lambda = grid, thresh = 1e-12)
+cv.out <- cv.glmnet(x[train, ], y[train], alpha = 1, lambda = grid, nfolds = 10)
+bestlam <- cv.out$lambda.min  # Optimal lambda.
+rmse_lasso_cv <- sqrt(cv.out$cvm[cv.out$lambda == bestlam])  # RMSE fra krydsvalidering.
+lasso.pred <- predict(lasso.mod, s = bestlam, newx = x[test, ])  # Forudsigelser for testdata.
+rmse_lasso_test <- sqrt(mean((lasso.pred - y.test)^2))  # RMSE for testdata.
+
+cat("RMSE for Lasso Regression:", rmse_lasso_test, "\n")  # Udskriv RMSE.
+
+# Udtræk koefficienter fra Lasso-modellen.
+lasso_coefs <- as.matrix(coef(lasso.mod, s = bestlam))  # Konverter til matrix.
+
+# Opret en data frame med ikke-nul koefficienter.
+lasso_coefs_df <- data.frame(
+  Variable = rownames(lasso_coefs),  # Hent variabelnavne.
+  Coefficient = as.numeric(lasso_coefs)  # Hent koefficientværdier.
+) |>
+  filter(Coefficient != 0)  # Filtrer kun variabler med ikke-nul koefficienter.
+
+# Print resultatet.
+print(lasso_coefs_df)
+
+# ------------------------------------------------------------------------------
+# Sammenligning af modeller
+# ------------------------------------------------------------------------------
+
+# Beregn RMSE for hver model
+baseline_rmse <- rmse_0_test  # RMSE for baseline-modellen.
+ridge_rmse <- rmse_ridge_test  # RMSE for Ridge Regression.
+lasso_rmse <- rmse_lasso_test  # RMSE for Lasso Regression.
+
+# Beregn MAE (Mean Absolute Error) for hver model
+baseline_mae <- mean(abs(y.test - predict(glm.fit, joins_samlet_model[test, ])))  # MAE for baseline-modellen.
+ridge_mae <- mean(abs(ridge_pred - y.test))  # MAE for Ridge Regression.
+lasso_mae <- mean(abs(as.numeric(lasso.pred) - y.test))  # MAE for Lasso Regression.
+
+# Beregn R² (forklaringsgrad) for hver model
+baseline_r2 <- 1 - sum((y.test - predict(glm.fit, joins_samlet_model[test, ]))^2) / sum((y.test - mean(y.test))^2)  # R² for baseline.
+ridge_r2 <- 1 - sum((y.test - ridge_pred)^2) / sum((y.test - mean(y.test))^2)  # R² for Ridge Regression.
+lasso_r2 <- 1 - sum((y.test - as.numeric(lasso.pred))^2) / sum((y.test - mean(y.test))^2)  # R² for Lasso Regression.
+
+# Opret en tibble til sammenligning af modeller
+results_table <- tibble(
+  Model = c("Baseline", "Ridge", "Lasso"),  # Navne på modeller.
+  RMSE = c(baseline_rmse, ridge_rmse, lasso_rmse),  # RMSE-værdier.
+  MAE = c(baseline_mae, ridge_mae, lasso_mae),  # MAE-værdier.
+  R_squared = c(baseline_r2, ridge_r2, lasso_r2)  # R²-værdier.
+)
+
+# Print resultattabel
+print(results_table)
+
+# ------------------------------------------------------------------------------
+# Visualisering af RMSE
+# ------------------------------------------------------------------------------
+# Diagram der sammenligner RMSE (Root Mean Square Error) for de forskellige modeller.
+ggplot(results_table, aes(x = Model, y = RMSE)) +
+  geom_col(fill = "steelblue") +  # Søjlediagram med farven 'steelblue'.
+  geom_text(aes(label = round(RMSE, 2)), vjust = -0.5) +  # Tilføj RMSE-værdier som tekst over søjlerne.
+  labs(
+    title = "RMSE for Modeller",  # Titel på plottet.
+    x = "Model",                 # Navn på x-aksen.
+    y = "RMSE"                   # Navn på y-aksen.
+  ) +
+  theme_minimal()  # Minimalistisk tema for et rent udseende.
+
+# ------------------------------------------------------------------------------
+# Visualisering af Lasso-koefficienter
+# ------------------------------------------------------------------------------
+
+# Diagram, der viser værdierne af koefficienterne fra Lasso-modellen, eksklusiv intercept.
+ggplot(lasso_coefs_df |> filter(Variable != "(Intercept)"), 
+       aes(x = reorder(Variable, Coefficient), y = Coefficient)) +
+  geom_col(fill = "lightblue") +  # Søjlediagram med farven 'lightblue'.
+  coord_flip() +  # Roter diagrammet horisontalt for bedre læsbarhed.
+  labs(
+    title = "Koefficientværdier fra Lasso-modellen (uden intercept)",  # Titel på plottet.
+    x = "Variabel",                                                  # Navn på x-aksen.
+    y = "Koefficient"                                                # Navn på y-aksen.
+  ) +
+  theme_minimal()  # Minimalistisk tema for et rent udseende.
+
+# ------------------------------------------------------------------------------
+# Visualisering af Lasso-koefficienternes betydning
+# ------------------------------------------------------------------------------
+
+# Tilføj en kolonne med absolutværdien af koefficienterne for at vurdere betydningen.
+lasso_coefs_df <- lasso_coefs_df |> 
+  mutate(Importance = abs(Coefficient))  # Beregn absolutværdien af koefficienterne.
+
+# Diagram, der viser betydningen af variablerne baseret på absolutværdien af deres koefficienter.
+ggplot(lasso_coefs_df |> filter(Variable != "(Intercept)"), 
+       aes(x = reorder(Variable, Importance), y = Importance)) +
+  geom_col(fill = "orange") +  # Søjlediagram med farven 'orange'.
+  coord_flip() +  # Roter diagrammet horisontalt for bedre læsbarhed.
+  labs(
+    title = "Variabelbetydning i Lasso-modellen (uden intercept)",  # Titel på plottet.
+    x = "Variabel",                                                # Navn på x-aksen.
+    y = "Absolut koefficientværdi"                                 # Navn på y-aksen.
+  ) +
+  theme_minimal()  # Minimalistisk tema for et rent udseende.
+
+#===============================================================================
+#                  6. Forudsigelser og evaluering
+#===============================================================================
+
+# Vi vælger at fortsætte med Lasso Regression, da den giver en god balance mellem 
+# modelpræcision og simplicitet. Selvom Ridge Regression opnår en lavere RMSE (126)
+# sammenlignet med Lasso Regression (133), foretrækker vi Lasso Regression, fordi
+# den reducerer kompleksiteten ved at inkludere kun 6 variabler i modellen.
+# Dette gør Lasso Regression lettere at tolke og implementere.
+
+#-------------------------------------------------------------------------------
+#                         Lasso Regression Prediction
+#-------------------------------------------------------------------------------
+
+# Funktion til forudsigelse med Lasso Regression
+lasso_predict <- function(nye_data, lasso_coefs_df) {
+  # Hent interceptet
+  intercept <- lasso_coefs_df$Coefficient[lasso_coefs_df$Variable == "(Intercept)"]
+  
+  # Fjern interceptet fra lasso_coefs_df for at behandle de andre variabler separat
+  koefs_df <- lasso_coefs_df[lasso_coefs_df$Variable != "(Intercept)", ]
+  
+  # Tjek for manglende variabler i nye_data
+  manglende_variabler <- setdiff(koefs_df$Variable, names(nye_data))
+  if (length(manglende_variabler) > 0) {
+    stop(glue::glue("Følgende variabler mangler i nye_data: {paste(manglende_variabler, collapse = ', ')}"))
+  }
+  
+  # Opret en navngivet vektor med koefficienter
+  koefs <- setNames(koefs_df$Coefficient, koefs_df$Variable)
+  
+  # Konverter nye_data til en numerisk vektor, der matcher rækkefølgen af koefficienterne
+  nye_data_vector <- unlist(nye_data)[names(koefs)]
+  
+  # Tjek for eventuelle NA-værdier
+  if (any(is.na(nye_data_vector))) {
+    stop("De nye data indeholder NA-værdier.")
+  }
+  
+  # Beregn forudsigelsen som en lineær kombination af input og koefficienter + intercept
+  forudsigelse <- sum(nye_data_vector * koefs) + intercept
+  
+  return(forudsigelse)
+}
+
+# Vi henter fremtidige vejrdata herfra:
+# https://open-meteo.com/en/docs/dmi-api#latitude=56.4532&longitude=9.402&hourly=relative_humidity_2m,cloud_cover,visibility,wind_direction_10m&timezone=Europe%2FBerlin&forecast_days=10
+# Data for visibility kan vi kun finde predicted tre dage frem i tiden
+# Under kampen har vi skrevet hvilken dato vi har taget vejrdata fra, da kampdatoen ligger så langt ude i fremtiden at vi ikke har kunnet tage den.
+
+# Kampen mod Silkeborg
+# Vejrdata d. 4. januar kl. 12.00
+silkeborg <- list(
+  guld_menuer_sidste_møde = 698,  # Antal guldmenuer fra sidste møde
+  luftfugtighed = 93,             # Luftfugtighed i % (målt 2 meter over terræn)
+  skydække = 28,                  # Totalt skydække i %
+  vindretning = 271,              # Vindretning i grader
+  antal_tilskuere = 5728,         # Forventet antal tilskuere som de kan forudsige med den model de allerede har (Da vi ikke har adgang til den har vi taget gennemsnittet af de sidste to kampe mod samme modstander)
+  sigtbarhed = 50000              # Sigtbarhed angivet i meter
+)
+
+# Kampen mod Vejle
+# Vejrdata d. 5. januar kl. 12.00
+vejle <- list(
+  guld_menuer_sidste_møde = 771,  # Antal guldmenuer fra sidste møde
+  luftfugtighed = 94,             # Luftfugtighed i % (målt 2 meter over terræn)
+  skydække = 100,                 # Totalt skydække i %
+  vindretning = 122,              # Vindretning i grader
+  antal_tilskuere = 6059,         # Forventet antal tilskuere som de kan forudsige med den model de allerede har (Da vi ikke har adgang til den har vi taget gennemsnittet af de sidste to kampe mod samme modstander)
+  sigtbarhed = 5900               # Sigtbarhed angivet i meter
+)
+
+# Kampen mod FC København
+# Vejrdata d. 6. januar kl. 12.00
+kobenhavn <- list(
+  guld_menuer_sidste_møde = 650,  # Antal guldmenuer fra sidste møde
+  luftfugtighed = 97,             # Luftfugtighed i % (målt 2 meter over terræn)
+  skydække = 100,                 # Totalt skydække i %
+  vindretning = 193,              # Vindretning i grader
+  antal_tilskuere = 8092,         # Forventet antal tilskuere som de kan forudsige med den model de allerede har (Da vi ikke har adgang til den har vi taget gennemsnittet af de sidste to kampe mod samme modstander)
+  sigtbarhed = 2220               # Sigtbarhed angivet i meter
+)
+
+# Vi laver forudsigelsen
+forventet_guldmenuer_silkeborg <- round(lasso_predict(silkeborg, lasso_coefs_df = lasso_coefs_df))
+forventet_guldmenuer_vejle <- round(lasso_predict(vejle, lasso_coefs_df = lasso_coefs_df))
+forventet_guldmenuer_kobenhavn <- round(lasso_predict(kobenhavn, lasso_coefs_df = lasso_coefs_df))
+
+# Print resultatet
+cat("Forventet antal guldmenuer afhentet ved kampen imod Silkeborg IF:", forventet_guldmenuer_silkeborg, "\n")
+cat("Forventet antal guldmenuer afhentet ved kampen imod Vejle BK:", forventet_guldmenuer_vejle, "\n")
+cat("Forventet antal guldmenuer afhentet ved kampen imod FC København:", forventet_guldmenuer_kobenhavn, "\n")
+
+# ============================================================================== 
+# Residual plot for Lasso-Regression
+# ============================================================================== 
+# Residuals er forskellen mellem de faktiske værdier (y.test) og de forudsagte 
+# værdier fra Lasso-modellen (lasso.pred). 
+# De hjælper med at evaluere modellens præcision og afsløre potentielle problemer.
+lasso_residuals <- y.test - as.numeric(lasso.pred)  
+# y.test er de faktiske værdier fra testdatasættet, mens as.numeric(lasso.pred)
+# konverterer forudsagte værdier til numerisk format, hvis de ikke allerede er det.
+
+# ============================================================================== 
+# Opret en data frame til visualisering
+# ============================================================================== 
+# Vi opretter en data frame med tre kolonner:
+# - `Actual`: De faktiske værdier (y.test).
+# - `Predicted`: De forudsagte værdier fra modellen.
+# - `Residuals`: Beregnede residuals (fejl).
+lasso_residuals_df <- data.frame(
+  Actual = y.test,                     # Faktiske værdier fra testdata.
+  Predicted = as.numeric(lasso.pred),  # Forudsagte værdier fra modellen.
+  Residuals = lasso_residuals          # Residuals, dvs. fejl (Actual - Predicted).
+)
+
+# ============================================================================== 
+# Visualisering af residualer for Lasso Regression
+# ============================================================================== 
+# Vi visualiserer residualerne for at analysere, hvordan de fordeler sig
+# i forhold til de forudsagte værdier.
+
+ggplot(lasso_residuals_df, aes(x = Predicted, y = Residuals)) +
+  
+  # Plot residualerne som punkter
+  geom_point(color = "blue", alpha = 0.6) +
+  # `geom_point` viser hver residual som et punkt i plottet.
+  # Farven blå (`color = "blue"`) bruges for klarhed, og gennemsigtigheden (`alpha = 0.6`)
+  # reducerer overlap mellem punkter, så mønstre bliver lettere at se.
+  
+  # Tilføj en horisontal linje ved y = 0
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red", size = 1) +
+  # En stiplet, rød linje (`linetype = "dashed", color = "red"`) markerer nulpunktet.
+  # Residualerne bør ideelt set være tilfældigt fordelt omkring denne linje.
+  
+  # Tilføj labels og titel
+  labs(
+    title = "Residual Plot for Lasso-Regression",  # Titel, der beskriver plottet.
+    x = "Forudsagte værdier",                      # Beskrivelse af x-aksen.
+    y = "Residuals (Fejl)"                         # Beskrivelse af y-aksen.
+  ) +
+  
+  # Anvend et minimalistisk tema for bedre læsbarhed
+  theme_minimal()
+# `theme_minimal()` fjerner overflødige grafikelementer, hvilket gør plottet mere læsbart.
+
+```
