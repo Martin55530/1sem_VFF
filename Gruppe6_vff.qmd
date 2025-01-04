@@ -1,7 +1,151 @@
+---
+title: "Vintereksamen - Dataanalyse"
+subtitle: "Januar 2025"
+date: last-modified
+author: "Bjarne Taulo Sørensen"
+format: 
+  pdf:
+   toc: true
+   toc-title: Indholdsfortegnelse
+   toc-depth: 4
+   number-sections: true
+   number-depth: 4
+   geometry:
+      - top=30mm
+      - left=20mm
+      - right=20mm
+      - bottom=30mm
+      - heightrounded
+abstract: "Her kan I skrive et abstract, som ikke bør fylde mere end en halv side. Bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, bla, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa, blaaaa....hej. Hej fra Martin" "abdi"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| warning: false
+#| 
+
+# eval: false prevents code from being evaluated. (And obviously if the code is not run, no results will be generated). This is useful for displaying example code, or for disabling a large block of code without commenting each line.
+
+# include: false runs the code, but doesn’t show the code or results in the final document. Use this for setup code that you don’t want cluttering your report.
+
+# echo: false prevents code, but not the results from appearing in the finished file. Use this when writing reports aimed at people who don’t want to see the underlying R code.
+
+# Du kan lave code chunks med crtl/alt/I. 
+# Angiv en label som ovenfor til hver chunk. 
+# Brug evt. include, eval, echo eller en anden parameter til at få det ønskede output
+
+pacman::p_load("tidyverse", "tinytex")
+# tinytex::install_tinytex()
+# tinytex::pdflatex('test.tex')
+
+# Tilføj selv flere pakker
+```
+
+# Intro
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+## Oversigt
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+# Metode
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+## Videnskabsteori
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+# Databrug (intern analyse i data perspektiv)
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+Her under **Organisation,** **Processer (benchmark),** **Kultur,** **Modenhed** 
+
+# Datainitiativer
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+
+## Introduktion til dataanalysen
+Quarto supports executable code blocks within markdown allowing you to create fully reproducible documents and reports. The code required to produce your output is part of the document itself, and is automatically re-run whenever the document is rendered.
+ 
+Herunder **Baggrund,** **Formål,** **Fra forretningsproblem til datamining problem,** **Oversigt**
+
+---
+
+## Data/dataforståelse
+
+### Importer data til R
+Datasættet blev indlæst i R fra flere kilder: 
+1. **VIP-menu data** fra Excel-ark, 
+2. **Superstats kampdata** vha. webscraping og 
+3. **Meteorologiske observationer** fra DMI's API.
+
+Data blev samlet ved hjælp af `inner_join` på kampdatoer, hvilket sikrede kun relevante observationer for analyse. Herefter blev irrelevante kolonner og rækker fjernet, og datastrukturen kontrolleret for konsistens.
+
+### Output variabel
+Den valgte **outputvariabel** er `guld_menu_stk`, der repræsenterer antallet af afhentede VIP-guldmenuer. Dette er målet for modellens forudsigelser.
+
+### Forklarende variabler
+De forklarende variabler inkluderede blandt andet:
+- **Meteorologiske faktorer** som `vindretning`, `luftfugtighed`, `sigtbarhed` og `skydække`.
+- **Kamprelaterede faktorer** som `antal_tilskuere` og `guldmenu_sidste_møde`.
+- **Afledte faktorerr** som `ugedag`, `årstid` og `point_sidste_3_kampe`.
+
+### Data pre-processing i R
+Data blev forbehandlet for at sikre høj datakvalitet:
+- **Håndtering af outliers**: Medianimputering blev brugt til at reducere påvirkningen af ekstreme værdier.
+- **Manglende værdier**: Udfyldt med medianer eller estimeret ved hjælp af tidligere observationer.
+- **Transformationer**: Variabler som eksempelvis `ugedag` og `årstid` blev oprettet for at forbedre modellens forklaringskraft.
+
+### Explorative analyse
+Den eksplorative analyse inkluderede histogrammer, scatterplots og korrelationsmatrixer for at identificere mønstre og sammenhænge. Stærkt korrelerede variabler blev fjernet for at reducere multikollinearitet.
+
+---
+
+## Valg af metode til at teste model performance
+For at evaluere modellens performance anvendte vi:
+1. **Træning/test-split**: Datasættet blev opdelt i 2/3 træning og 1/3 test.
+2. **Krydsvalidering**: 10-fold krydsvalidering blev brugt til at finde optimale parametre for Ridge og Lasso.
+3. **Performance-målinger**: RMSE, MAE og R² blev anvendt til at vurdere præcision og forklaringsgrad.
+
+---
+
+## Resultater
+
+### Konkurrerende modeller
+Tre modeller blev sammenlignet:
+1. **Baseline-model**: Forudsagde middelværdien uden forklarende variabler (RMSE = 147.49).
+2. **Ridge Regression**: Reducerede RMSE til 125.67 ved at inkludere alle variabler.
+3. **Lasso Regression**: Opnåede RMSE på 133.11 og forenklede modellen ved at udvælge de mest relevante variabler.
+
+### Modeludvælgelse
+Den endelige model blev valgt ud fra en balance mellem præcision og simplicitet. **Lasso Regression** blev valgt for dens evne til at reducere variabler uden væsentlig præcisionstab.
+
+### Overordnet præcision i forudsigelse
+Lasso Regression reducerede RMSE med ca. 10% sammenlignet med baseline og inkluderede seks centrale variabler hvor dem med højest vægt er `guld_menuer_sidste_møde`, `antal_tilskuere` og `luftfugtighed`.
+
+---
+
+## Diskussion
+
+### Vurdering af modellens performance
+Modellen opnåede en **RMSE på 133.11** og en forklaringsgrad (R²) på 18.4%. Hvilket indikerer, at modellen kun forklarer 18.4% af variabiliteten i data. Resultaterne antyder, at væsentlige forklarende faktorer mangler, og modellen bør forbedres med yderligere data.
+
+### Vurdering af bidraget til løsningen af forretningsproblemet
+Modellen giver indsigt i faktorer som ugedage og modstanderens historik, der påvirker efterspørgslen. F.eks. viser data, at bundklubben Vejle trækker mange guldmenuer, hvilket kan skyldes sociale relationer eller arrangementer. Det er dog også med en vis statistisk usikkerhed, da de kun har mødt  Vejle fire gange i Superligaen 2013-2023.
+
+### Udrulning af anbefalingerne
+For at gøre modellen mere anvendelig anbefales:
+1. **Indsamling af yderligere data** som netværksaktiviteter og events.
+2. **Analyse af sociale faktorer** som mønstre i VIP-gæsters adfærd.
+3. **Løbende opdatering af modellen** med nye data for at forbedre præcisionen.
+4. **Lave en ny variabel** som indebærer de forskellige sponsorer, for at få indblik i deres brugeradfærd af guldmenuer.
+
+# Konklusion
+Lasso Regression-modellen viser potentiale for at forudsige efterspørgslen efter VIP-guldmenuer. Dog kræves yderligere variabler og løbende opdateringer for at opnå højere præcision og forretningsværdi. Konklusionen er, at modellen endnu ikke er tilstrækkelig præcis til praktisk anvendelse, sandsynligvis på grund af manglende data. Der er stadig mennesker hos Viborg F.F. (Palle), der skal vurdere hvor mange der kommer og afhenter guldmenuer til deres hjemmekampe.
+
+---
+```{r}
 #===============================================================================
 #                                 Introduktion
 #===============================================================================
-
 # Denne kode udfører en omfattende dataanalyse og databehandling med henblik på 
 # at opbygge et datasæt, der kan anvendes til at modellere og forudsige 
 # VIP-guldmenuafhentninger for Viborg FF (VFF). Workflowet omfatter alt fra 
@@ -1167,21 +1311,4 @@ ggplot(lasso_residuals_df, aes(x = Predicted, y = Residuals)) +
   theme_minimal()
 # `theme_minimal()` fjerner overflødige grafikelementer, hvilket gør plottet mere læsbart.
 
-# ============================================================================== 
-# Forklaring af plottet:
-# ============================================================================== 
-# 1. Residualerne (y-aksen) viser fejlene i modellens forudsigelser.
-# 2. De forudsagte værdier (x-aksen) hjælper med at identificere eventuelle mønstre
-#    i fejlfordelingen:
-#    - Hvis residualerne er tilfældigt fordelt omkring nul-linjen (rød linje),
-#      er det et godt tegn på, at modellen er passende.
-#    - Systematiske mønstre (fx en buet eller hældende linje) kan indikere, at modellen
-#      ikke har fanget alle relevante sammenhænge.
-# 3. Outliers (punkter langt fra nul-linjen) kan pege på specifikke observationer,
-#    hvor modellen præsterer dårligt.
-# 4. Heteroskedasticitet (ændringer i spredningen af residualerne ved forskellige
-#    forudsagte værdier) kan indikere, at modellen har problemer med at håndtere
-#    variabilitet i dataene.
-
-################################## NÅET HERTIL #################################
-
+```
